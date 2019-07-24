@@ -1,0 +1,5 @@
+.DS_Store
+*.pdf
+*.pyc
+*.ipynb
+local_setup
