@@ -13,6 +13,3 @@ git clone https://github.com/NikosOikou/bitmap-processing.git
 ```javascript
 node app
 ```
-### Notes
-
--Needs to be translated to Typescript
