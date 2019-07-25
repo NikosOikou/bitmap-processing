@@ -9,7 +9,13 @@ The repository contains a solution to a programming assessment
 git clone https://github.com/NikosOikou/bitmap-processing.git
 ```
 2. Install node.js
-3. Run
+
+3. Install type definitions for node
+```sh
+npm install @types/node --save-dev
+```
+
+4. Run
 ```javascript
 node app
 ```
