@@ -6,8 +6,8 @@
 // 3.1 Mark pixels around the image as visisted (-1)
 // 3.2 Starting from a pixel, get pixels on up, left, down, right.
 //     If a white pixel is found, calculate distance and exit.
-//     If not put every pixel that is not visited in a queue.
-// 3.3 Mark current pixel as visited (-1).
+//     If not put every pixel that is not state in a queue.
+// 3.3 Mark current pixel as state (-1).
 // 3.4 Dequeue an element from queue
 // 3.5 Repeat 3.2-3.4 until a white pixel is found.
 // 4. Repeat 2-3 for all test cases
@@ -19,27 +19,23 @@ var setCoord = function (obj, coord, value) {
   obj[coord[0] + "," + coord[1]] = {"coord": coord, "value": value};
 };
 
-var setDistance = function (distances, coord, value) {
-  distances[coord[0] + "," + coord[1]] = {"coord": coord, "value": value};
-};
-
-var getCoord = function (obj, coord) {
+var getPixel = function (obj, coord) {
   return obj[coord[0] + "," + coord[1]];
 };
 
-var getCoordUp = function (obj, coord) {
+var getPixelUp = function (obj, coord) {
   return obj[(coord[0] - 1) + "," + coord[1]];
 };
 
-var getCoordLeft = function (obj, coord) {
+var getPixelLeft = function (obj, coord) {
   return obj[coord[0] + "," + (coord[1] - 1)];
 };
 
-var getCoordDown = function (obj, coord) {
+var getPixelDown = function (obj, coord) {
   return obj[(coord[0] + 1) + "," + coord[1]];
 };
 
-var getCoordRight = function (obj, coord) {
+var getPixelRight = function (obj, coord) {
   return obj[coord[0] + "," + (coord[1] + 1)];
 };
 
@@ -51,36 +47,35 @@ var getDistance = function (pixel1, pixel2) {
   return Math.abs(x1 - x0) + Math.abs(y1 - y0);
 };
 
-var setupVisitedPixels = function(rows, num_rows, num_cols) {
-  var visited = {};
+var setupState = function(rows, num_rows, num_cols) {
+  var state = {};
 
   // Exract white/black information and set it to
-  // visited object via the setCoord helper function
-  // The value property of visited holds the values
+  // state object via the setCoord helper function
+  // The value property of state holds the values
   // 1 and 0 for white and black, as well as -1 for
-  // a visited pixel or a boundary condition pixel.
-  for (var x = 0; x < num_rows; x++) {
-    var row = rows[x];
-    var values = row.split("");
+  // a state pixel or a boundary condition pixel.
 
-    for (var y = 0; y < values.length; y++) {
-      var value = values[y];
-      setCoord(visited, [x, y], parseInt(value));
+  for (var i = 0; i < num_rows; i++) {
+    var values = rows[i].split("");
+
+    for (var j = 0; j < values.length; j++) {
+      var value = values[j];
+      setCoord(state, [i, j], parseInt(value));
     }
   }
 
-  // Set boundary pixels as visited on visited object
-
-  for (var x = 0; x < num_rows; x++) {
-    setCoord(visited, [x, -1], -1);    // top boundary
-    setCoord(visited, [x, num_cols], -1);   // bottom boundary
+  // Set boundary pixels on state object
+  for (var i = 0; i < num_rows; i++) {
+    setCoord(state, [i, -1], -1);        // top boundary
+    setCoord(state, [i, num_cols], -1);  // bottom boundary
   }
 
-  for (var x = 0; x < num_cols; x++) {
-    setCoord(visited, [-1, x], -1);   // left boundary
-    setCoord(visited, [num_rows, x], -1);  // right boundary
+  for (var i = 0; i < num_cols; i++) {
+    setCoord(state, [-1, i], -1);        // left boundary
+    setCoord(state, [num_rows, i], -1);  // right boundary
   }
-  return visited;
+  return state;
 }
 
 // Start solution
@@ -92,37 +87,30 @@ var n = 0;
 
 data_arr.forEach(function(row) {
 
-  if (n == 0) {
-    var idx = 1;
-  } else {
-    var idx = 0;
-  }
-
   // Parse variables from string
+  var idx = (n === 0) ? 1 : 0;
   var dims = row.split("\n")[idx];
   var num_rows = parseInt(dims.split(" ")[0]);
   var num_cols = parseInt(dims.split(" ")[1]);
-  var row_arr = row.split("\n");
-  var rows = row_arr.slice(idx+1, row_arr.length);
+  var rows = row.split("\n").slice(idx+1);
 
-  // visited keeps the state of the solution
-  visited = setupVisitedPixels(rows, num_rows, num_cols);
+  // state keeps the state of the solution
+  state = setupState(rows, num_rows, num_cols);
 
-  // Create a backup to reset visited for every new
+  // Create a backup to reset state for every new
   // starting pixel
-  var visited_backup = Object.assign({}, visited);
+  var state_backup = Object.assign({}, state);
   var distances = {};
 
   // For every pixel in the bitmap find minimum distance
   for (var i = 0; i < num_rows; i++) {
-
     for (var j = 0; j < num_cols; j++) {
 
       var queue = [];
       var closest = -1;
 
       // Get starting pixel
-      var pixel = getCoord(visited, [i, j]);
+      var pixel = getPixel(state, [i, j]);
 
       // Keep reference of starting pixel to
       // calculate distance with closest pixel
@@ -137,13 +125,13 @@ data_arr.forEach(function(row) {
 
         // Check neighboring pixels
         for (var elem of [
-          getCoordUp(visited, pixel.coord),
-          getCoordLeft(visited, pixel.coord),
-          getCoordDown(visited, pixel.coord),
-          getCoordRight(visited, pixel.coord)
+          getPixelUp(state, pixel.coord),
+          getPixelLeft(state, pixel.coord),
+          getPixelDown(state, pixel.coord),
+          getPixelRight(state, pixel.coord)
         ]) {
 
-          var pixel_temp = getCoord(visited, elem.coord);
+          var pixel_temp = getPixel(state, elem.coord);
 
           // Exit if it is white
           if (pixel_temp.value === 1) {
@@ -158,19 +146,19 @@ data_arr.forEach(function(row) {
         }
 
         // Set to visisted if current pixel wasn't the closest
-        if (closest == -1) {
-          setCoord(visited, pixel.coord, -1);
+        if (closest === -1) {
+          setCoord(state, pixel.coord, -1);
         }
 
         // Get next pixel from the queue
         pixel = queue.shift();
 
       }
-      var distance = getDistance(start, closest);
-      setDistance(distances, [i, j], distance);
 
-      // Reset visited
-      var visited = Object.assign({}, visited_backup);
+      distances[i + "," + j] = getDistance(start, closest);
+
+      // Reset state
+      var state = Object.assign({}, state_backup);
     }
   }
 
@@ -183,8 +171,7 @@ data_arr.forEach(function(row) {
   // Cast output to desired format
   for (var i = 0; i < num_rows; i++) {
     for (var j = 0; j < num_cols; j++) {
-      var distance = distances[i + "," + j].value;
-      result += distance + " ";
+      result += distances[i + "," + j] + " ";
     }
 
     result = result.trim();
